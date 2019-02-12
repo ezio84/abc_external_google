@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.os.UserHandle;
 import android.provider.Settings;
 
-import com.android.internal.util.du.ActionUtils;
+import com.android.internal.util.du.Utils;
 import com.android.systemui.Dependency;
 import com.android.systemui.assist.AssistManager;
 
@@ -46,25 +46,25 @@ public class CustomActions extends Action {
                 launchIntent(Intent.ACTION_SEARCH_LONG_PRESS, getContext());
                 break;
             case 3: // Flashlight
-                ActionUtils.toggleCameraFlash();
+                Utils.toggleCameraFlash();
                 break;
             case 4: // Clear notifications
-                ActionUtils.clearAllNotifications();
+                Utils.clearAllNotifications();
                 break;
             case 5: // Volume panel
-                ActionUtils.toggleVolumePanel(getContext());
+                Utils.toggleVolumePanel(getContext());
                 break;
             case 6: // Screen off
-                ActionUtils.switchScreenOff(getContext());
+                Utils.switchScreenOff(getContext());
                 break;
             case 7: // Notification panel
-                ActionUtils.toggleNotifications();
+                Utils.toggleNotifications();
                 break;
             case 8: // Screenshot
-                ActionUtils.takeScreenshot(true);
+                Utils.takeScreenshot(true);
                 break;
             case 9: // QS panel
-                ActionUtils.toggleQsPanel();
+                Utils.toggleQsPanel();
                 break;
         }
     }
