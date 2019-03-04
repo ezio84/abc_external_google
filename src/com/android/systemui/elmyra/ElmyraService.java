@@ -2,6 +2,7 @@ package com.google.android.systemui.elmyra;
 
 import android.content.Context;
 import android.metrics.LogMaker;
+import android.os.Handler;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
@@ -28,11 +29,11 @@ public class ElmyraService {
     private final GestureSensor.Listener mGestureListener = new GestureListener(this, null);
     private final GestureSensor mGestureSensor;
     private Action mLastActiveAction;
-    private long mLastPrimedGesture;
-    private int mLastStage;
     private final MetricsLogger mLogger;
     private final PowerManager mPowerManager;
     private final WakeLock mWakeLock;
+
+    private Handler mHandler;
 
     /* renamed from: com.google.android.systemui.elmyra.ElmyraService$1 */
     class C15821 implements Listener {
@@ -57,6 +58,10 @@ public class ElmyraService {
     }
 
     private class GestureListener implements GestureSensor.Listener {
+
+        private boolean mIsStillSqueezing;
+        private DetectionProperties mDetectionProperties;
+
         private GestureListener() {
         }
 
@@ -66,34 +71,33 @@ public class ElmyraService {
 
         public void onGestureDetected(GestureSensor gestureSensor, DetectionProperties detectionProperties) {
             mWakeLock.acquire(2000);
-            boolean isInteractive = mPowerManager.isInteractive();
-            int i = (detectionProperties == null || !detectionProperties.isHostSuspended()) ? !isInteractive ? 2 : 1 : 3;
-            LogMaker latency = new LogMaker(999).setType(4).setSubtype(i).setLatency(isInteractive ? SystemClock.uptimeMillis() - mLastPrimedGesture : 0);
-            mLastPrimedGesture = 0;
-            Action activeAction = updateActiveAction();
+            mDetectionProperties = detectionProperties;
+            /*Action activeAction = updateActiveAction();
             if (activeAction != null) {
                 activeAction.onTrigger(detectionProperties);
                 mFeedbackEffects.forEach(feedbackEff -> feedbackEff.onResolve(detectionProperties));
-            }
-            latency.setPackageName(activeAction.getClass().getName());
-            mLogger.write(latency);
+            }*/
+            mHandler.postDelayed(mLongSqueezeRunnable, 700);
         }
 
+        private final Runnable mLongSqueezeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Action activeAction = updateActiveAction();
+                if (activeAction != null) {
+                    mDetectionProperties.setLongSqueeze(mIsStillSqueezing);
+                    activeAction.onTrigger(mDetectionProperties);
+                    mFeedbackEffects.forEach(feedbackEff -> feedbackEff.onResolve(mDetectionProperties));
+                }
+            }
+        };
+
         public void onGestureProgress(GestureSensor gestureSensor, float f, int i) {
+            mIsStillSqueezing = f != 0;
             Action activeAction = updateActiveAction();
             if (activeAction != null) {
                 activeAction.onProgress(f, i);
                 mFeedbackEffects.forEach(feedbackEff -> feedbackEff.onProgress(f, i));
-            }
-            if (i != mLastStage) {
-                long uptimeMillis = SystemClock.uptimeMillis();
-                if (i == 2) {
-                    mLogger.action(998);
-                    mLastPrimedGesture = uptimeMillis;
-                } else if (i == 0 && mLastPrimedGesture != 0) {
-                    mLogger.write(new LogMaker(997).setType(4).setLatency(uptimeMillis - mLastPrimedGesture));
-                }
-                mLastStage = i;
             }
         }
     }
@@ -103,7 +107,7 @@ public class ElmyraService {
         mLogger = new MetricsLogger();
         mPowerManager = (PowerManager) mContext.getSystemService("power");
         mWakeLock = mPowerManager.newWakeLock(1, "Elmyra/ElmyraService");
-
+        mHandler = new Handler();
         mActions = new ArrayList(serviceConfiguration.getActions());
         mActions.forEach(action -> action.setListener(mActionListener));
 

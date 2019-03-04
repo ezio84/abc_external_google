@@ -41,9 +41,6 @@ class AssistGestureController {
     private final float mProgressReportThreshold;
     private final SnapshotController mSnapshotController;
     // When the squeeze detection starts (expressed in ms)
-    private long mGestureStartTime;
-    // Long squeeze duration threshold
-    private long mLongSqueezeDuration;
 
     private class OPAQueryReceiver extends BroadcastReceiver {
         private OPAQueryReceiver() {
@@ -80,7 +77,6 @@ class AssistGestureController {
         mProgressReportThreshold = typedValue.getFloat();
         mGestureCooldownTime = (long) resources.getInteger(R.integer.elmyra_gesture_cooldown_time);
         mFalsePrimeWindow = mGestureCooldownTime + ((long) resources.getInteger(R.integer.elmyra_false_prime_window));
-        mLongSqueezeDuration = (long) resources.getInteger(R.integer.elmyra_long_squeeze_duration);
         mSnapshotController = new SnapshotController(snapshotConfiguration);
     }
 
@@ -97,7 +93,7 @@ class AssistGestureController {
     }
 
     public void onGestureDetected(DetectionProperties detectionProperties) {
-        long uptimeMillis = SystemClock.uptimeMillis();
+        long uptimeMillis = SystemClock.elapsedRealtime();
         if (uptimeMillis - mLastDetectionTime >= mGestureCooldownTime && !mIsFalsePrimed) {
             if (mGestureListener != null) {
                 mGestureListener.onGestureDetected(mGestureSensor, detectionProperties);
@@ -110,12 +106,6 @@ class AssistGestureController {
     public void onGestureProgress(float f) {
         int i = 1;
 
-        // If the gesture progress is equal to 0, the action hasn't started yet.
-        if (mGestureProgress == 0.0f) {
-            // Store the time when the action got triggered.
-            mGestureStartTime = SystemClock.uptimeMillis();
-        }
-
         if (f == 0.0f) {
             mGestureProgress = 0.0f;
             mIsFalsePrimed = false;
@@ -123,21 +113,15 @@ class AssistGestureController {
             mGestureProgress = (mProgressAlpha * f) + ((1.0f - mProgressAlpha) * mGestureProgress);
         }
 
-        long uptimeMillis = SystemClock.uptimeMillis();
-        float f2;
+        long uptimeMillis = SystemClock.elapsedRealtime(); // elapsedRealtime counts in Deep Sleep
 
         if (uptimeMillis - mLastDetectionTime >= mGestureCooldownTime && !mIsFalsePrimed) {
             if (uptimeMillis - mLastDetectionTime < mFalsePrimeWindow && f == 1.0f) {
                 mIsFalsePrimed = true;
             } else if (mGestureProgress < mProgressReportThreshold) {
                 sendGestureProgress(mGestureSensor, 0.0f, 0);
-            } else if (uptimeMillis - mGestureStartTime >= mLongSqueezeDuration && f == 1.0f) {
-                    f2 = (mGestureProgress - mProgressReportThreshold) / (1.0f - mProgressReportThreshold);
-                    onGestureDetected(new DetectionProperties(false, false, /* longSqueeze */ true));
-                    // Send progress to have consistent animations
-                    sendGestureProgress(mGestureSensor, f2, f == 1f ? 2 : i);
             } else {
-                f2 = (mGestureProgress - mProgressReportThreshold) / (1.0f - mProgressReportThreshold);
+                float f2 = (mGestureProgress - mProgressReportThreshold) / (1.0f - mProgressReportThreshold);
                 sendGestureProgress(mGestureSensor, f2, f == 1f ? 2 : i);
             }
         }
