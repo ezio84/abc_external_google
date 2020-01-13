@@ -1,7 +1,7 @@
 package com.google.android.systemui.statusbar.phone;
 
 import android.widget.ImageView;
-import com.android.internal.util.du.Utils;
+import com.android.internal.util.custom.Utils;
 import com.android.systemui.R;
 import com.android.systemui.Dependency;
 import com.android.systemui.dock.DockManager;

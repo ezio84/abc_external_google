@@ -22,7 +22,7 @@ public class SkipGestureSettings extends DashboardFragment {
     }
 
     public int getMetricsCategory() {
-        return MetricsProto.MetricsEvent.DIRTYTWEAKS;
+        return MetricsProto.MetricsEvent.ABC;
     }
 
     public int getPreferenceScreenResId() {
