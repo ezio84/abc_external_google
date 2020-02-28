@@ -83,19 +83,19 @@ public class CustomActions extends Action {
                 break;
             case 9: // Notification panel
                 if (isScreenOn) {
-                    // Utils.toggleNotifications();
+                    Utils.toggleNotifications();
                 }
                 break;
             case 10: // QS panel
                 if (isScreenOn) {
-                    // Utils.toggleQsPanel();
+                    Utils.toggleQsPanel();
                 }
                 break;
             case 11: // Clear notifications
-                // Utils.clearAllNotifications();
+                Utils.clearAllNotifications();
                 break;
             case 12: // Ringer modes
-                // Utils.toggleRingerModes(getContext());
+                Utils.toggleRingerModes(getContext());
                 break;
         }
     }
