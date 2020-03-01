@@ -97,6 +97,9 @@ public class CustomActions extends Action {
             case 12: // Ringer modes
                 Utils.toggleRingerModes(getContext());
                 break;
+            case 13: // Kill app
+                Utils.killForegroundApp();
+                break;
         }
     }
 
