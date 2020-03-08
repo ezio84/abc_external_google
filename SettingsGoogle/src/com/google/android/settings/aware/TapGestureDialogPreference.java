@@ -22,7 +22,7 @@ public class TapGestureDialogPreference extends AwareGestureDialogPreference {
     }
 
     public int getSourceMetricsCategory() {
-        return MetricsProto.MetricsEvent.DIRTYTWEAKS;
+        return MetricsProto.MetricsEvent.ABC;
     }
 
     public void onClick(DialogInterface dialogInterface, int i) {
